@@ -140,7 +140,7 @@ fun Login(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(id = R.drawable.logo1),
+                painter = painterResource(id = R.drawable.logo2),
                 contentDescription = null,
                 modifier = Modifier
                     .size(width = 124.dp, height = 155.dp)
