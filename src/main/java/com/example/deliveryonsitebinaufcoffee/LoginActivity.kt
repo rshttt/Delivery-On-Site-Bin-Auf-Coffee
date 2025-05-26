@@ -10,6 +10,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,6 +41,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -51,6 +54,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
@@ -284,10 +288,10 @@ fun Login(
                     modifier = modifier
                 ) {
                     composable<SignUp> {
-                        SignUpMenu(email, username, password, onClickButton, inputEmail, inputUsername, inputPassword)
+                        SignUpMenu(email, username, password,onClickSignIn, onClickButton, inputEmail, inputUsername, inputPassword)
                     }
                     composable<SignIn> {
-                        SignInMenu(email, password, onClickButton, inputEmail, inputPassword)
+                        SignInMenu(email, password, onClickSignUp, onClickButton, inputEmail, inputPassword)
                     }
                 }
             }
@@ -336,6 +340,7 @@ fun SignUpMenu(
     email: String,
     username: String,
     password: String,
+    onClickSignIn: () -> Unit,
     onClickButton: () -> Unit,
     inputEmail: (String) -> Unit,
     inputUsername: (String) -> Unit,
@@ -344,96 +349,114 @@ fun SignUpMenu(
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
     Column (
-        verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        OutlinedTextField(
-            value = email,
-            onValueChange = inputEmail,
-            placeholder = {
-                Text(
-                    text = "Email",
-                    color = Color(0xFF735557).copy(alpha = 0.3f)
-                )
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.outline,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-
-                ),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .width(268.dp)
-        )
-
-        OutlinedTextField(
-            value = username,
-            onValueChange = inputUsername,
-            placeholder = {
-                Text(
-                    text = "Username",
-                    color = Color(0xFF735557).copy(alpha = 0.3f)
-                )
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.outline,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-
-                ),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .width(268.dp)
-        )
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = inputPassword,
-            placeholder = {
-                Text(
-                    text = "Password",
-                    color = Color(0xFF735557).copy(alpha = 0.3f)
-                )
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.outline,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-
-                ),
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            trailingIcon = {
-                IconButton(
-                    onClick = { passwordVisible = !passwordVisible },
-                    modifier = Modifier
-                        .size(20.dp)
-                ) {
-                    Icon(
-                        imageVector = if(passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                        contentDescription = null
+        Column (
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            OutlinedTextField(
+                value = email,
+                onValueChange = inputEmail,
+                placeholder = {
+                    Text(
+                        text = "Email",
+                        color = Color(0xFF735557).copy(alpha = 0.3f)
                     )
-                }
-            },
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .width(268.dp)
-        )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.outline,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                ),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .width(268.dp)
+            )
 
-        Spacer(modifier = Modifier.height(0.dp))
+            OutlinedTextField(
+                value = username,
+                onValueChange = inputUsername,
+                placeholder = {
+                    Text(
+                        text = "Username",
+                        color = Color(0xFF735557).copy(alpha = 0.3f)
+                    )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.outline,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+
+                    ),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .width(268.dp)
+            )
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = inputPassword,
+                placeholder = {
+                    Text(
+                        text = "Password",
+                        color = Color(0xFF735557).copy(alpha = 0.3f)
+                    )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.outline,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+
+                    ),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { passwordVisible = !passwordVisible },
+                        modifier = Modifier
+                            .size(20.dp)
+                    ) {
+                        Icon(
+                            imageVector = if(passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = null
+                        )
+                    }
+                },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .width(268.dp)
+            )
+
+            Button(
+                onClick = onClickButton,
+                colors = ButtonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = Color.White,
+                    disabledContainerColor = Color.Transparent,
+                    disabledContentColor = Color.Transparent
+                ),
+                modifier = Modifier
+                    .padding(top = 20.dp)
+                    .size(height = 44.dp, width = 212.dp)
+            ) {
+                Text(
+                    text = "SIGN UP",
+                    fontFamily = FontFamily(Font(resId = R.font.lexend_bold)),
+                    fontSize = 20.sp
+                )
+            }
+        }
 
         Button(
-            onClick = onClickButton,
+            onClick = onClickSignIn,
             colors = ButtonColors(
-                containerColor = MaterialTheme.colorScheme.tertiary,
-                contentColor = Color.White,
+                containerColor = Color.Transparent,
+                contentColor = Color.Black.copy(alpha = 0.42f),
                 disabledContainerColor = Color.Transparent,
                 disabledContentColor = Color.Transparent
-            ),
-            modifier = Modifier
-                .size(height = 44.dp, width = 212.dp)
+            )
         ) {
             Text(
-                text = "SIGN UP",
-                fontFamily = FontFamily(Font(resId = R.font.lexend_bold)),
-                fontSize = 20.sp
+                text = "Already have an account?",
+                fontFamily = FontFamily(Font(resId = R.font.lexend_light)),
+                fontSize = 12.sp
             )
         }
     }
@@ -443,6 +466,7 @@ fun SignUpMenu(
 fun SignInMenu(
     email: String,
     password: String,
+    onClickSignUp: () -> Unit,
     onClickButton: () -> Unit,
     inputEmail: (String) -> Unit,
     inputPassword: (String) -> Unit
@@ -506,39 +530,41 @@ fun SignInMenu(
                 modifier = Modifier
                     .width(268.dp)
             )
+        }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Forgot your password?",
+            fontFamily = FontFamily(Font(resId = R.font.lexend_bold)),
+            fontSize = 12.sp,
+            color = Color.Black.copy(alpha = 0.42f),
+            modifier = Modifier
+                .clickable {  }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onClickButton,
+            colors = ButtonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = Color.White,
+                disabledContainerColor = Color.Transparent,
+                disabledContentColor = Color.Transparent
+            ),
+            modifier = Modifier
+                .size(height = 44.dp, width = 212.dp)
+        ) {
             Text(
-                text = "Forgot your password?",
+                text = "SIGN IN",
                 fontFamily = FontFamily(Font(resId = R.font.lexend_bold)),
-                fontSize = 12.sp,
-                color = Color.Black.copy(alpha = 0.42f),
-                modifier = Modifier
-                    .clickable {  }
+                fontSize = 20.sp
             )
-
-            Spacer(modifier = Modifier.height(0.dp))
-
-            Button(
-                onClick = onClickButton,
-                colors = ButtonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = Color.White,
-                    disabledContainerColor = Color.Transparent,
-                    disabledContentColor = Color.Transparent
-                ),
-                modifier = Modifier
-                    .size(height = 44.dp, width = 212.dp)
-            ) {
-                Text(
-                    text = "SIGN IN",
-                    fontFamily = FontFamily(Font(resId = R.font.lexend_bold)),
-                    fontSize = 20.sp
-                )
-            }
         }
 
         Button(
-            onClick = {},
+            onClick = onClickSignUp,
             colors = ButtonColors(
                 containerColor = Color.Transparent,
                 contentColor = Color.Black.copy(alpha = 0.42f),
@@ -559,6 +585,45 @@ fun SignInMenu(
                     fontSize = 12.sp
                 )
             }
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row (
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            HorizontalDivider(
+                modifier = Modifier
+                    .width(60.dp),
+                color = Color.Black.copy(alpha = 0.3f)
+            )
+
+            Text(
+                text = "or sign-in with",
+                color = Color.Black.copy(alpha = 0.5f)
+
+            )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .width(60.dp),
+                color = Color.Black.copy(alpha = 0.3f)
+            )
+        }
+
+        Button(
+            onClick = onClickButton,
+            colors = ButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                disabledContentColor = Color.Transparent
+            )
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.sign_in_google),
+                contentDescription = null
+            )
         }
     }
 }
