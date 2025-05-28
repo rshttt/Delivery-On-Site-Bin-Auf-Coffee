@@ -1,8 +1,8 @@
 package com.example.deliveryonsitebinaufcoffee
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -10,7 +10,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -41,7 +41,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -66,6 +65,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -81,20 +81,59 @@ class LoginActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(modifier = Modifier.padding(innerPadding))
+                    LoginScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
     }
 }
 
+fun isValidEmail(email: String): Boolean {
+//    ^ — Awal string
+//    [A-Za-z] — Karakter pertama harus huruf (besar atau kecil)
+//    (.*) — Karakter apapun (0 atau lebih kali) setelah huruf pertama (boleh apa saja)
+//    ([@]{1}) — Harus ada tepat satu karakter @
+//    (.+) — Minimal satu karakter apapun setelah @ (bagian domain sebelum titik)
+//    (\.) — Harus ada karakter titik .
+//    (.+) — Minimal satu karakter apapun setelah titik (bagian domain setelah titik)
+    val emailRegex = Regex("^[A-Za-z](.*)(@)(.+)(\\.)(.+)")
+    return emailRegex.matches(email)
+}
+
+fun isValidPassword(password: String): Boolean {
+//    ^ — Awal string
+//    (?=.*[a-z]) — Harus ada minimal satu huruf kecil
+//    (?=.*[A-Z]) — Harus ada minimal satu huruf besar
+//    (?=.*\d) — Harus ada minimal satu digit/angka (0-9)
+//    .{8,} — Total panjang password minimal 8 karakter (boleh lebih)
+//    $ — Akhir string
+    val passwordRegex = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$")
+    return passwordRegex.matches(password)
+}
+
+fun isValidUsername(username: String): Boolean {
+//    ^ — Awal string
+//    [A-Za-z0-9_] — Karakter yang diperbolehkan hanya huruf besar, huruf kecil, angka, dan underscore _
+//    {3,} — Panjang string minimal 3 karakter
+//    $ — Akhir string
+    val usernameRegex = Regex("^[A-Za-z0-9_]{3,}$")
+    return usernameRegex.matches(username)
+}
+
 @Composable
-fun MainScreen(modifier: Modifier = Modifier) {
-    var showGreeting by rememberSaveable { mutableStateOf(true) }
+fun LoginScreen(modifier: Modifier = Modifier) {
+    var showGreeting by rememberSaveable { mutableStateOf(false) }
+    var showLogin by rememberSaveable { mutableStateOf(false) }
+    var showImage by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        showGreeting = true
+        delay(300)
+        showImage = true
         delay(3000)
+        showImage = false
         showGreeting = false
+        showLogin = true
     }
 
     Box(
@@ -105,40 +144,58 @@ fun MainScreen(modifier: Modifier = Modifier) {
         AnimatedVisibility(
             visible = showGreeting,
             enter = fadeIn(animationSpec = tween(500)),
-            exit = fadeOut(animationSpec = tween(500))
+            exit = fadeOut(animationSpec = tween(1000))
         ) {
-            Greeting()
+            Greeting(showImage = showImage)
         }
 
         AnimatedVisibility(
-            visible = !showGreeting,
-            enter = fadeIn(animationSpec = tween(500)),
+            visible = showLogin,
+            enter = fadeIn(animationSpec = tween(1000)),
             exit = fadeOut(animationSpec = tween(500))
         ) {
-            LoginPage()
+            LoginPage(changePage = { showLogin = false })
         }
     }
 }
 
 @Composable
-fun Greeting(modifier: Modifier = Modifier) {
+fun Greeting(
+    modifier: Modifier = Modifier,
+    showImage: Boolean
+) {
     Box(
         modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.tertiary),
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.opening),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-        )
+        AnimatedVisibility(
+            visible = showImage,
+            enter = fadeIn(animationSpec = tween(500)),
+            exit = fadeOut(animationSpec = tween(500))
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.opening),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+            )
+        }
     }
 }
 
+@Serializable
+object SignUp
+@Serializable
+object SignIn
+
 @Composable
-fun LoginPage(modifier: Modifier = Modifier) {
+fun LoginPage(
+    modifier: Modifier = Modifier,
+    accounts: AccountItems = viewModel(),
+    changePage: () -> Unit
+) {
     var email by rememberSaveable { mutableStateOf("") }
     var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -160,7 +217,26 @@ fun LoginPage(modifier: Modifier = Modifier) {
             signUp = false
             controller.navigate(SignIn)
         },
+        onClickSignUpButton = {
+            if(isValidEmail(email) && isValidPassword(password) && isValidUsername(username)) {
+                accounts.registerAccount(email, username, password)
+                context.startActivity(intent)
+            } else
+                Toast.makeText(context, "Registrasi akun gagal", Toast.LENGTH_SHORT).show()
+        },
+        onClickSignInButton = {
+            if(isValidEmail(email) && isValidPassword(password)) {
+                accounts.loginAccount(email, password)?.let {
+                    context.startActivity(intent)
+                } ?: run {
+                    Toast.makeText(context, "Akun atau Password tidak sesuai", Toast.LENGTH_SHORT).show()
+                }
+            } else
+                Toast.makeText(context, "Login akun gagal", Toast.LENGTH_SHORT).show()
+        },
         onClickButton = {
+            changePage()
+            Toast.makeText(context, "Login berhasil", Toast.LENGTH_SHORT).show()
             context.startActivity(intent)
         },
         inputEmail = { newEmail -> email = newEmail },
@@ -169,11 +245,6 @@ fun LoginPage(modifier: Modifier = Modifier) {
         navigation = controller
     )
 }
-
-@Serializable
-object SignUp
-@Serializable
-object SignIn
 
 @Composable
 fun Login(
@@ -184,6 +255,8 @@ fun Login(
     password: String,
     onClickSignUp: () -> Unit,
     onClickSignIn: () -> Unit,
+    onClickSignUpButton: () -> Unit,
+    onClickSignInButton: () -> Unit,
     onClickButton: () -> Unit,
     inputEmail: (String) -> Unit,
     inputUsername: (String) -> Unit,
@@ -197,8 +270,8 @@ fun Login(
     ) {
         Column (
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 80.dp),
+                .fillMaxWidth()
+                .padding(top = 60.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
@@ -288,10 +361,10 @@ fun Login(
                     modifier = modifier
                 ) {
                     composable<SignUp> {
-                        SignUpMenu(email, username, password,onClickSignIn, onClickButton, inputEmail, inputUsername, inputPassword)
+                        SignUpMenu(email, username, password,onClickSignIn, onClickSignUpButton, inputEmail, inputUsername, inputPassword)
                     }
                     composable<SignIn> {
-                        SignInMenu(email, password, onClickSignUp, onClickButton, inputEmail, inputPassword)
+                        SignInMenu(email, password, onClickSignUp, onClickSignInButton, onClickButton, inputEmail, inputPassword)
                     }
                 }
             }
@@ -341,7 +414,7 @@ fun SignUpMenu(
     username: String,
     password: String,
     onClickSignIn: () -> Unit,
-    onClickButton: () -> Unit,
+    onClickSignUpButton: () -> Unit,
     inputEmail: (String) -> Unit,
     inputUsername: (String) -> Unit,
     inputPassword: (String) -> Unit
@@ -369,6 +442,7 @@ fun SignUpMenu(
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 ),
                 shape = RoundedCornerShape(16.dp),
+                singleLine = true,
                 modifier = Modifier
                     .width(268.dp)
             )
@@ -388,6 +462,7 @@ fun SignUpMenu(
 
                     ),
                 shape = RoundedCornerShape(16.dp),
+                singleLine = true,
                 modifier = Modifier
                     .width(268.dp)
             )
@@ -420,12 +495,13 @@ fun SignUpMenu(
                     }
                 },
                 shape = RoundedCornerShape(16.dp),
+                singleLine = true,
                 modifier = Modifier
                     .width(268.dp)
             )
 
             Button(
-                onClick = onClickButton,
+                onClick = onClickSignUpButton,
                 colors = ButtonColors(
                     containerColor = MaterialTheme.colorScheme.tertiary,
                     contentColor = Color.White,
@@ -444,21 +520,16 @@ fun SignUpMenu(
             }
         }
 
-        Button(
-            onClick = onClickSignIn,
-            colors = ButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = Color.Black.copy(alpha = 0.42f),
-                disabledContainerColor = Color.Transparent,
-                disabledContentColor = Color.Transparent
-            )
-        ) {
-            Text(
-                text = "Already have an account?",
-                fontFamily = FontFamily(Font(resId = R.font.lexend_light)),
-                fontSize = 12.sp
-            )
-        }
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Already have an account?",
+            fontFamily = FontFamily(Font(resId = R.font.lexend_light)),
+            fontSize = 12.sp,
+            color =  Color.Black.copy(alpha = 0.42f),
+            modifier = Modifier
+                .clickable { onClickSignIn() }
+        )
     }
 }
 
@@ -467,6 +538,7 @@ fun SignInMenu(
     email: String,
     password: String,
     onClickSignUp: () -> Unit,
+    onClickSignInButton: () -> Unit,
     onClickButton: () -> Unit,
     inputEmail: (String) -> Unit,
     inputPassword: (String) -> Unit
@@ -495,6 +567,7 @@ fun SignInMenu(
 
                     ),
                 shape = RoundedCornerShape(16.dp),
+                singleLine = true,
                 modifier = Modifier
                     .width(268.dp)
             )
@@ -527,12 +600,13 @@ fun SignInMenu(
                     }
                 },
                 shape = RoundedCornerShape(16.dp),
+                singleLine = true,
                 modifier = Modifier
                     .width(268.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
             text = "Forgot your password?",
@@ -546,7 +620,7 @@ fun SignInMenu(
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
-            onClick = onClickButton,
+            onClick = onClickSignInButton,
             colors = ButtonColors(
                 containerColor = MaterialTheme.colorScheme.tertiary,
                 contentColor = Color.White,
@@ -563,29 +637,27 @@ fun SignInMenu(
             )
         }
 
-        Button(
-            onClick = onClickSignUp,
-            colors = ButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = Color.Black.copy(alpha = 0.42f),
-                disabledContainerColor = Color.Transparent,
-                disabledContentColor = Color.Transparent
-            )
-        ) {
-            Row {
-                Text(
-                    text = "Don't have an account?",
-                    fontFamily = FontFamily(Font(resId = R.font.lexend_light)),
-                    fontSize = 12.sp
-                )
+        Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = " Register here!",
-                    fontFamily = FontFamily(Font(resId = R.font.lexend_bold)),
-                    fontSize = 12.sp
-                )
-            }
+        Row (
+            modifier = Modifier
+                .clickable { onClickSignUp() }
+        ) {
+            Text(
+                text = "Don't have an account?",
+                fontFamily = FontFamily(Font(resId = R.font.lexend_light)),
+                fontSize = 12.sp,
+                color = Color.Black.copy(alpha = 0.42f)
+            )
+
+            Text(
+                text = " Register here!",
+                fontFamily = FontFamily(Font(resId = R.font.lexend_bold)),
+                fontSize = 12.sp,
+                color = Color.Black.copy(alpha = 0.42f)
+            )
         }
+
         Spacer(modifier = Modifier.height(20.dp))
 
         Row (
@@ -611,20 +683,15 @@ fun SignInMenu(
             )
         }
 
-        Button(
-            onClick = onClickButton,
-            colors = ButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent,
-                disabledContentColor = Color.Transparent
-            )
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.sign_in_google),
-                contentDescription = null
-            )
-        }
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Image(
+            painter = painterResource(id = R.drawable.sign_in_google),
+            contentDescription = null,
+            modifier = Modifier
+                .clip(shape = CircleShape)
+                .clickable { onClickButton() }
+        )
     }
 }
 
@@ -632,7 +699,7 @@ fun SignInMenu(
 @Composable
 fun GreetingPreview() {
     AppTheme {
-        Greeting()
+        Greeting(showImage = true)
     }
 }
 
@@ -640,6 +707,6 @@ fun GreetingPreview() {
 @Composable
 fun LoginPreview() {
     AppTheme {
-        LoginPage()
+        LoginPage(changePage = {})
     }
 }
