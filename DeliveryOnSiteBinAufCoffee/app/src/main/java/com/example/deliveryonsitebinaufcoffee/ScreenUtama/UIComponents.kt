@@ -57,7 +57,7 @@ fun CategoryCard(
     val imageUrl = remember(category.id) {
         category.image_path?.let { path ->
             val cleanPath = path.removePrefix("/")
-            "http://192.168.0.112:8001/$cleanPath"
+            "http://192.168.111.198:8001/$cleanPath"
         }
     }
 
@@ -126,6 +126,12 @@ fun ProductCard(
     onProductClick: () -> Unit,
     categories: List<com.example.deliveryonsitebinaufcoffee.model.Category> = emptyList(),
 ) {
+    val imageUrl = remember(product.id) {
+        product.image_path?.let { path ->
+            val cleanPath = path.removePrefix("/")
+            "http://192.168.111.198:8001/$cleanPath"
+        }
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -165,15 +171,33 @@ fun ProductCard(
                             .padding(4.dp),
                         contentAlignment = Alignment.Center
                     ) {
+                        val context = LocalContext.current
+                        val imageRequest = ImageRequest.Builder(context)
+                            .data(imageUrl)
+                            .size(60)
+                            .scale(Scale.FILL)
+                            .crossfade(true)
+                            .placeholder(R.drawable.ic_launcher_foreground)
+                            .error(R.drawable.ic_launcher_foreground)
+                            .build()
+
                         // Gunakan AsyncImage untuk load image dari URL
                         AsyncImage(
-                            model = product.image_path,
+                            model = imageRequest,
                             contentDescription = product.name,
                             modifier = Modifier
                                 .padding(4.dp),
-                            contentScale = ContentScale.Fit,
+                            contentScale = ContentScale.FillHeight,
                             // Fallback jika image gagal load
-                            error = painterResource(id = R.drawable.ic_launcher_foreground)
+                            error = painterResource(id = R.drawable.ic_launcher_foreground),
+                            placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+                            onSuccess = {
+                                println("✅ ${product.name} loaded successfully")
+                            },
+                            onError = { error ->
+                                println("❌ ${product.name} failed: ${error.result.throwable?.message}")
+                                println("URL: $imageUrl")
+                            }
                         )
                     }
                 }
